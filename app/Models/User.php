@@ -48,20 +48,15 @@ class User extends Authenticatable
      */
     public function role()
     {
-        return $this->belongsTo(Role::class);
+        return $this->belongsTo(Role::class,'role_id','id');
     }
 
-    /**
-     * Define relationship with the Company model.
-     */
-    // public function company()
-    // {
-    //     return $this->belongsTo(Company::class);
-    // }
+    public function company()
+    {
+        return $this->belongsTo(CompanyMaster::class, 'company_id', 'comp_id');
+    }
 
-    /**
-     * Define relationship with the User model for created_by.
-     */
+
     public function creator()
     {
         return $this->belongsTo(User::class, 'created_by');
