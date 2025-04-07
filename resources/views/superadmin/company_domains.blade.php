@@ -5,6 +5,220 @@
 @section('content')
     <div class="main-panel">
         <div class="content-wrapper">
+            @php $info = $data['information_records']; @endphp
+
+            <div class="card mb-4 shadow-sm p-3">
+                <div class="row align-items-center">
+                    {{-- Left: Logo --}}
+                    <div class="col-md-3 text-center">
+                        @if (!empty($info['Logo']['Content']))
+                            <img src="{{ $info['Logo']['Content'] }}" alt="Company Logo" class="img-fluid"
+                                style="max-height: 120px; object-fit: contain;">
+                        @else
+                            <div class="text-muted">No logo available</div>
+                        @endif
+                    </div>
+
+                    {{-- Right: Company Info --}}
+                    <div class="col-md-9">
+                        <h4 class="mb-2">{{ $info['Name'] ?? 'N/A' }}</h4>
+                        <p class="mb-1"><strong>Website:</strong>
+                            <a href="http://{{ $info['Url'] }}" target="_blank">{{ $info['Url'] }}</a>
+                        </p>
+                        <p class="mb-1"><strong>Industry:</strong>
+                            {{ $info['Industry']['IndustryName'] ?? 'N/A' }}
+                        </p>
+                        <p class="mb-1"><strong>Number of Employees:</strong>
+                            {{ $info['NumberOfEmployees'] ?? 'N/A' }}
+                        </p>
+                        <p class="mb-1"><strong>Risk Rating:</strong>
+                            {{ $info['CountryRiskRating'] ?? 'N/A' }}
+                        </p>
+                        <p class="mb-1"><strong>Score:</strong>
+                            {{ $info['Score'] ?? 'N/A' }}
+                        </p>
+                        @if (!empty($info['Specialities']))
+                            <p class="mb-1"><strong>Specialities:</strong> {{ $info['Specialities'] }}</p>
+                        @endif
+                    </div>
+                </div>
+                <div class="col d-flex flex-wrap gap-2">
+                    <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#socialMediaModal">Social
+                        Media</button>
+                    <button class="btn btn-secondary" data-bs-toggle="modal" data-bs-target="#dnsModal">DNS Records</button>
+                    <button class="btn btn-success" data-bs-toggle="modal" data-bs-target="#emailsModal">Emails</button>
+                    <button class="btn btn-dark" data-bs-toggle="modal" data-bs-target="#cloudModal">Cloud</button>
+                </div>
+            </div>
+
+            {{-- Bootstrap Modals --}}
+            <!-- Social Media Modal -->
+            <div class="modal fade" id="socialMediaModal" tabindex="-1" aria-labelledby="socialMediaLabel"
+                aria-hidden="true">
+                <div class="modal-dialog modal-dialog-centered modal-lg">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title">Company Social Media Accounts</h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                        </div>
+                        <div class="modal-body">
+                            @php
+                                $icons = [
+                                    'instagram' => 'fab fa-instagram',
+                                    'facebook' => 'fab fa-facebook',
+                                    'twitter' => 'fab fa-twitter',
+                                    'linkedin' => 'fab fa-linkedin',
+                                    'youtube' => 'fab fa-youtube',
+                                ];
+                            @endphp
+
+                            @if (!empty($data['social_records']))
+                                @foreach ($data['social_records'] as $item)
+                                    <div class="d-flex align-items-center mb-3 border-bottom pb-2">
+                                        <i
+                                            class="{{ $icons[strtolower($item['Media'])] ?? 'fas fa-globe' }} fs-3 text-primary me-3"></i>
+                                        <div>
+                                            <h6 class="mb-1 text-capitalize">{{ $item['Media'] }}</h6>
+                                            <a href="{{ $item['Url'] }}" target="_blank">{{ $item['Url'] }}</a>
+                                            <p class="text-muted small mb-0">{{ $item['Domain'] }}</p>
+                                        </div>
+                                    </div>
+                                @endforeach
+                            @else
+                                <p>No social media records found.</p>
+                            @endif
+                        </div>
+
+                    </div>
+                </div>
+            </div>
+
+            <!-- DNS Modal -->
+            <div class="modal fade" id="dnsModal" tabindex="-1" aria-labelledby="dnsModalLabel" aria-hidden="true">
+                <div class="modal-dialog modal-dialog-centered modal-lg">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title">DNS Records</h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                        </div>
+                        <div class="modal-body">
+                            @if (!empty($data['dns_records']) && is_array($data['dns_records']))
+                                <div class="table-responsive">
+                                    <table class="table table-bordered table-sm">
+                                        <thead>
+                                            <tr>
+                                                <th>Name</th>
+                                                <th>Type</th>
+                                                <th>Address</th>
+                                                <th>Relations</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            @foreach ($data['dns_records'] as $record)
+                                                <tr>
+                                                    <td>{{ $record['Name'] ?? '-' }}</td>
+                                                    <td>{{ $record['Type'] ?? '-' }}</td>
+                                                    <td>{{ $record['Address'] ?? '-' }}</td>
+                                                    <td>
+                                                        @if (!empty($record['Relations']) && is_array($record['Relations']))
+                                                            <ul class="mb-0 ps-3">
+                                                                @foreach ($record['Relations'] as $relation)
+                                                                    <li>{{ $relation }}</li>
+                                                                @endforeach
+                                                            </ul>
+                                                        @else
+                                                            -
+                                                        @endif
+                                                    </td>
+                                                </tr>
+                                            @endforeach
+                                        </tbody>
+                                    </table>
+                                </div>
+                            @else
+                                <p>No DNS records available.</p>
+                            @endif
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+
+            <!-- Emails Modal -->
+            <div class="modal fade" id="emailsModal" tabindex="-1" aria-labelledby="emailsModalLabel" aria-hidden="true">
+                <div class="modal-dialog modal-dialog-centered modal-lg">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title">Emails</h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                        </div>
+                        <div class="modal-body">
+                            <input type="text" id="emailSearch" class="form-control mb-3" placeholder="Search emails...">
+
+                            <div class="table-responsive">
+                                <table class="table table-bordered table-sm align-middle">
+                                    <thead class="table-light">
+                                        <tr>
+                                            <th>Email</th>
+                                            <th>Detection Date</th>
+                                            <th>Source</th>
+                                            <th>Type</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="emailTableBody">
+                                        @foreach ($data['email_records'] as $index => $record)
+                                            <tr class="email-row">
+                                                <td>{{ $record['Email'] }}</td>
+                                                <td>{{ $record['DetectionDate'] }}</td>
+                                                <td>{{ $record['Source'] }}</td>
+                                                <td>{{ $record['SourceType'] }}</td>
+                                            </tr>
+                                        @endforeach
+                                    </tbody>
+                                </table>
+                            </div>
+
+                            <nav>
+                                <ul class="pagination justify-content-center" id="emailPagination"></ul>
+                            </nav>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Information Modal -->
+            <div class="modal fade" id="infoModal" tabindex="-1" aria-labelledby="infoModalLabel" aria-hidden="true">
+                <div class="modal-dialog modal-dialog-centered modal-md">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title">Information</h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal"
+                                aria-label="Close"></button>
+                        </div>
+                        <div class="modal-body">
+                            <p>Display extra info about the company or domain.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Cloud Modal -->
+            <div class="modal fade" id="cloudModal" tabindex="-1" aria-labelledby="cloudModalLabel"
+                aria-hidden="true">
+                <div class="modal-dialog modal-dialog-centered modal-md">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title">Cloud</h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal"
+                                aria-label="Close"></button>
+                        </div>
+                        <div class="modal-body">
+                            <p>Show if this company uses AWS, GCP, Azure, etc.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
             <div class="row">
                 <h3>Active Domain Details</h3>
                 @if (isset($data['domains']) && count($data['domains']) > 0)
@@ -76,11 +290,11 @@
                             </thead>
                             <tbody id="subdomainTableBody">
                                 @foreach ($data['subdomains'] as $index => $subdomain)
-
                                     <tr>
                                         <td>{{ $index + 1 }}</td>
                                         <td>{{ $subdomain['Subdomain'] }}</td>
-                                        <td>{{ is_array($subdomain['IPAddresses']) ? implode(', ', $subdomain['IPAddresses']) : $subdomain['IPAddresses'] }}</td>
+                                        <td>{{ is_array($subdomain['IPAddresses']) ? implode(', ', $subdomain['IPAddresses']) : $subdomain['IPAddresses'] }}
+                                        </td>
                                         <td>{{ $subdomain['StatusCode'] }}</td>
                                         <td>
                                             @if ($subdomain['HasSslTlsSupport'])
@@ -117,6 +331,90 @@
             </div>
         </div>
     </div>
+
+    <script>
+        document.addEventListener('alpine:init', () => {
+            Alpine.store('mediaData', {
+                mediaData: window.mediaData,
+                getIcon
+            });
+
+            Alpine.data('modalHandler', () => ({
+                open: false,
+                mediaData: window.mediaData,
+                getIcon
+            }));
+        });
+    </script>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const rows = document.querySelectorAll('#emailTableBody .email-row');
+            const pagination = document.getElementById('emailPagination');
+            const searchInput = document.getElementById('emailSearch');
+
+            let currentPage = 1;
+            const rowsPerPage = 5;
+
+            function showPage(page) {
+                const start = (page - 1) * rowsPerPage;
+                const end = start + rowsPerPage;
+
+                rows.forEach((row, index) => {
+                    row.style.display = index >= start && index < end ? '' : 'none';
+                });
+
+                renderPagination(page);
+            }
+
+            function renderPagination(activePage) {
+                const totalPages = Math.ceil(rows.length / rowsPerPage);
+                pagination.innerHTML = '';
+
+                for (let i = 1; i <= totalPages; i++) {
+                    const li = document.createElement('li');
+                    li.classList.add('page-item');
+                    if (i === activePage) li.classList.add('active');
+
+                    const a = document.createElement('a');
+                    a.classList.add('page-link');
+                    a.href = '#';
+                    a.textContent = i;
+                    a.addEventListener('click', function(e) {
+                        e.preventDefault();
+                        currentPage = i;
+                        showPage(currentPage);
+                    });
+
+                    li.appendChild(a);
+                    pagination.appendChild(li);
+                }
+            }
+
+            searchInput.addEventListener('input', function() {
+                const term = this.value.toLowerCase();
+                let visibleRows = [];
+
+                rows.forEach(row => {
+                    const text = row.textContent.toLowerCase();
+                    const match = text.includes(term);
+                    row.style.display = match ? '' : 'none';
+                    if (match) visibleRows.push(row);
+                });
+
+                if (term) {
+                    pagination.style.display = 'none';
+                } else {
+                    pagination.style.display = '';
+                    showPage(currentPage);
+                }
+            });
+
+            if (rows.length > 0) {
+                showPage(currentPage);
+            }
+        });
+    </script>
 
     {{-- JavaScript for Search & Pagination --}}
     <script>

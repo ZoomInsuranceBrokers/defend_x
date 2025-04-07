@@ -587,22 +587,33 @@ class SuperAdminController extends Controller
         $domains_url = "https://app.blackkitetech.com/api/v2/companies/{$cmp_id}/domains?page_number=1&page_size=10000&classification=active&status=active";
         $domains_response = $this->fetchData($domains_url, $token);
 
-        // Fetch Subdomains
-        $subdomains_url = "https://app.blackkitetech.com/api/v2/companies/{$cmp_id}/subdomains?page_number=1&page_size=10&status=active";
+        $subdomains_url = "https://app.blackkitetech.com/api/v2/companies/{$cmp_id}/subdomains?page_number=1&page_size=250&status=active";
         $subdomains_response = $this->fetchData($subdomains_url, $token);
 
-        if (!$domains_response['success'] || !$subdomains_response['success']) {
-            return response()->json([
-                'error' => 'Failed to fetch data',
-                'domains_status' => $domains_response['status'],
-                'subdomains_status' => $subdomains_response['status']
-            ], 500);
-        }
+        $dns_url = "https://app.blackkitetech.com/api/v2/companies/{$cmp_id}/dnsrecords/IpAddress?page_number=1&page_size=250";
+        $dns_response = $this->fetchData($dns_url, $token);
 
-        // Merge the responses
+        $social_url = "https://app.blackkitetech.com/api/v2/companies/{$cmp_id}/socialmedia?page_number=1&page_size=250";
+        $social_response = $this->fetchData($social_url, $token);
+
+        $email_url = "https://app.blackkitetech.com/api/v2/companies/{$cmp_id}/emails?page_number=1&page_size=20";
+        $email_response = $this->fetchData($email_url, $token);
+
+        $information_url = "https://app.blackkitetech.com/api/v2/companies/{$cmp_id}/information";
+        $information_response = $this->fetchData($information_url, $token);
+
+
+        $cloud_url = "https://app.blackkitetech.com/api/v2/companies/{$cmp_id}/clouds?page_number=1&page_size=250";
+        $cloud_response = $this->fetchData($cloud_url, $token);
+
         $data = [
             'domains' => json_decode($domains_response['data'], true),
-            'subdomains' => json_decode($subdomains_response['data'], true)
+            'subdomains' => json_decode($subdomains_response['data'], true),
+            'dns_records' => json_decode($dns_response['data'], true),
+            'social_records' => json_decode($social_response['data'], true),
+            'email_records' => json_decode($email_response['data'], true),
+            'information_records' => json_decode($information_response['data'], true),
+            'cloud_records' => json_decode($cloud_response['data'], true)
         ];
 
         return view('superadmin.company_domains', compact('data', 'cmp_id'));
