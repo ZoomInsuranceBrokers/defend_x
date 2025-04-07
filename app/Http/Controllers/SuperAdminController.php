@@ -11,13 +11,90 @@ use App\Models\VendorMaster;
 
 class SuperAdminController extends Controller
 {
+
+    public function getAccessToken()
+    {
+        $url = "https://app.blackkitetech.com/api/v2/oauth/token";
+
+        $client_id = "569b2c06bd0847ce8b14cd825d2a2ebe";
+        $client_secret = "fc4935826234479cafc648e813482834";
+
+        $data = [
+            "grant_type" => "client_credentials",
+            "client_id" => $client_id,
+            "client_secret" => $client_secret
+        ];
+
+        $ch = curl_init();
+        curl_setopt($ch, CURLOPT_URL, $url);
+        curl_setopt($ch, CURLOPT_POST, true);
+        curl_setopt($ch, CURLOPT_POSTFIELDS, http_build_query($data));
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+        curl_setopt($ch, CURLOPT_HTTPHEADER, [
+            "Content-Type: application/x-www-form-urlencoded"
+        ]);
+
+        $response = curl_exec($ch);
+
+        if (curl_errno($ch)) {
+            curl_close($ch);
+            return "Curl Error: " . curl_error($ch);
+        }
+
+        curl_close($ch);
+
+        $response_data = json_decode($response, true);
+
+        if (isset($response_data['access_token'])) {
+            return $response_data['access_token'];
+        } else {
+            return "Error: Unable to retrieve access token";
+        }
+    }
     public function dashboard()
     {
         $user = Auth::user();
         $name = $user->full_name ?? 'User';
 
-        return view('superadmin.dashboard', compact('name'));
+        $access_token = $this->getAccessToken();
+
+        $url = "https://app.blackkitetech.com/api/v2/companies?page_number=1&page_size=10000";
+
+        $ch = curl_init();
+        curl_setopt($ch, CURLOPT_URL, $url);
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+        curl_setopt($ch, CURLOPT_HTTPHEADER, [
+            "accept: application/json",
+            "Authorization: Bearer " . $access_token
+        ]);
+
+        $response = curl_exec($ch);
+
+        if (curl_errno($ch)) {
+            curl_close($ch);
+            session()->flash('error', 'Curl Error: ' . curl_error($ch));
+            return redirect()->back();
+        }
+
+        $http_code = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+        curl_close($ch);
+
+        $companies = [];
+        if ($http_code == 200) {
+            $companies = json_decode($response, true);
+            session()->flash('success', 'Companies data retrieved successfully.');
+        } elseif ($http_code == 401) {
+            session()->flash('error', 'Unauthorized access. Please check your credentials.');
+        } elseif ($http_code == 403) {
+            session()->flash('error', 'Forbidden access. You do not have permission.');
+        } elseif ($http_code == 404) {
+            session()->flash('error', 'API endpoint not found.');
+        } else {
+            session()->flash('error', 'An unexpected error occurred. HTTP Code: ' . $http_code);
+        }
+        return view('superadmin.dashboard', compact('name',  'companies'));
     }
+
 
     //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     //////////////////////////////////////////////// Company Functions /////////////////////////////////////////////////////////////////////////
@@ -389,5 +466,178 @@ class SuperAdminController extends Controller
 
     //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     //////////////////////////////////////////////// Vendor Functions /////////////////////////////////////////////////////////////////////////
+    //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+
+
+
+    //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    //////////////////////////////////////////////// Report Functions /////////////////////////////////////////////////////////////////////////
+    //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+
+    public function companySummary($cmp_id)
+    {
+        $url = "https://app.blackkitetech.com/api/v2/companies/{$cmp_id}/summary";
+        $token = $this->getAccessToken();
+
+        $ch = curl_init();
+
+        curl_setopt($ch, CURLOPT_URL, $url);
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+        curl_setopt($ch, CURLOPT_HTTPHEADER, [
+            'accept: application/json',
+            "Authorization: Bearer $token"
+        ]);
+
+        $response = curl_exec($ch);
+
+        $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+
+        if (curl_errno($ch)) {
+            return response()->json(['error' => curl_error($ch)], 500);
+        }
+
+        curl_close($ch);
+
+        if ($httpCode !== 200) {
+            return response()->json(['error' => 'Failed to fetch company summary', 'status' => $httpCode], $httpCode);
+        }
+
+        $summary = json_decode($response, true);
+
+        return view('superadmin.company_summary', compact('summary', 'cmp_id'));
+    }
+    public function report_section(Request $request, $cmp_id)
+    {
+        $query_cmp_id = $request->query('cmp_id');
+
+        if (empty($cmp_id) || $cmp_id != $query_cmp_id) {
+            return redirect()->back()->with('error', 'Company ID mismatch or missing');
+        }
+
+        return view('superadmin.report_section', compact('cmp_id'));
+    }
+
+    public function company_trend($cmp_id)
+    {
+        $url = "https://app.blackkitetech.com/api/v2/companies/{$cmp_id}/trend/technical";
+        $token = $this->getAccessToken();
+
+        $ch = curl_init();
+
+        curl_setopt($ch, CURLOPT_URL, $url);
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+        curl_setopt($ch, CURLOPT_HTTPHEADER, [
+            'accept: application/json',
+            "Authorization: Bearer $token"
+        ]);
+
+        $response = curl_exec($ch);
+        $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+
+        if (curl_errno($ch)) {
+            return response()->json(['error' => curl_error($ch)], 500);
+        }
+
+        curl_close($ch);
+
+        if ($httpCode !== 200) {
+            return response()->json(['error' => 'Failed to fetch company trend', 'status' => $httpCode], $httpCode);
+        }
+
+        $data['techincal_trend'] = json_decode($response, true);
+
+        $url2 = "https://app.blackkitetech.com/api/v2/companies/{$cmp_id}/trend/financial";
+
+        $ch = curl_init();
+
+        curl_setopt($ch, CURLOPT_URL, $url2);
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+        curl_setopt($ch, CURLOPT_HTTPHEADER, [
+            'accept: application/json',
+            "Authorization: Bearer $token"
+        ]);
+
+        $response = curl_exec($ch);
+        $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+
+        if (curl_errno($ch)) {
+            return response()->json(['error' => curl_error($ch)], 500);
+        }
+
+        curl_close($ch);
+
+        if ($httpCode !== 200) {
+            return response()->json(['error' => 'Failed to fetch Financial trend', 'status' => $httpCode], $httpCode);
+        }
+
+        $data['financial_trend'] = json_decode($response, true);
+
+        return view('superadmin.company_trend', compact('data'));
+    }
+
+    public function digital_footprints($cmp_id)
+    {
+        $token = $this->getAccessToken();
+
+        // Fetch Domains
+        $domains_url = "https://app.blackkitetech.com/api/v2/companies/{$cmp_id}/domains?page_number=1&page_size=10000&classification=active&status=active";
+        $domains_response = $this->fetchData($domains_url, $token);
+
+        // Fetch Subdomains
+        $subdomains_url = "https://app.blackkitetech.com/api/v2/companies/{$cmp_id}/subdomains?page_number=1&page_size=10&status=active";
+        $subdomains_response = $this->fetchData($subdomains_url, $token);
+
+        if (!$domains_response['success'] || !$subdomains_response['success']) {
+            return response()->json([
+                'error' => 'Failed to fetch data',
+                'domains_status' => $domains_response['status'],
+                'subdomains_status' => $subdomains_response['status']
+            ], 500);
+        }
+
+        // Merge the responses
+        $data = [
+            'domains' => json_decode($domains_response['data'], true),
+            'subdomains' => json_decode($subdomains_response['data'], true)
+        ];
+
+        return view('superadmin.company_domains', compact('data', 'cmp_id'));
+    }
+
+    /**
+     * Helper function to fetch API data using cURL
+     */
+    private function fetchData($url, $token)
+    {
+        $ch = curl_init();
+
+        curl_setopt($ch, CURLOPT_URL, $url);
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+        curl_setopt($ch, CURLOPT_HTTPHEADER, [
+            'accept: application/json',
+            "Authorization: Bearer $token"
+        ]);
+
+        $response = curl_exec($ch);
+        $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+
+        if (curl_errno($ch)) {
+            curl_close($ch);
+            return ['success' => false, 'status' => 500, 'data' => curl_error($ch)];
+        }
+
+        curl_close($ch);
+
+        return ['success' => $httpCode === 200, 'status' => $httpCode, 'data' => $response];
+    }
+
+
+
+    //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    //////////////////////////////////////////////// Report Functions /////////////////////////////////////////////////////////////////////////
     //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 }

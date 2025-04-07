@@ -37,7 +37,9 @@
             flex: 1.5;
             position: relative;
             background-color: #0b0f19;
-            /* border: 1px solid white; */
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
         }
 
         /* Logo Styling */
@@ -258,13 +260,14 @@
     </style>
     <div class="full-width-container d-flex h-100vh">
         <!-- Left Section -->
-        <div
-            class="left-section d-flex flex-column justify-content-center align-items-center flex-grow-1 position-relative">
+        <div class="left-section d-flex flex-column justify-content-center align-items-center flex-grow-1 position-relative"
+            style=" background: url('{{ asset('assets/images/auth/login-page-bg.jpg')}}') no-repeat center center; background-size: cover;">
             <div class="logo-container position-absolute top-0 start-0 m-3">
                 <img src="{{ asset('assets/images/auth/Light-Logo-DefendX.png') }}" alt="Logo" class="logo-img"
                     role="img">
             </div>
-            <img src="{{ asset('assets/images/auth/lighting-3.gif') }}" alt="Animated Background" class="w-100 h-100 object-fit-cover">
+            <img src="{{ asset('assets/images/auth/lighting-3.gif') }}" alt="Animated Background"
+                class="w-100 h-100 object-fit-cover">
         </div>
 
         <!-- Right Section -->
@@ -282,7 +285,7 @@
                                 aria-label="User Icon"></i></span>
                         <input type="email" name="email" id="email"
                             class="form-control @error('email') is-invalid @enderror" placeholder="Enter your email"
-                            value="{{ old('email') }}"  role="textbox">
+                            value="{{ old('email') }}" role="textbox">
                         @error('email')
                             <div class="invalid-feedback">
                                 {{ $message }}
@@ -342,7 +345,7 @@
     </div>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script>
-        document.getElementById('toggle-password').addEventListener('click', function () {
+        document.getElementById('toggle-password').addEventListener('click', function() {
             const passwordInput = document.getElementById('password-input');
             const eyeIcon = document.getElementById('eye-icon');
             if (passwordInput.type === 'password') {

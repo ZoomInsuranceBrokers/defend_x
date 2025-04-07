@@ -71,6 +71,32 @@ Route::middleware(['superadmin'])->prefix('superadmin')->group(function () {
 
     Route::post('/edit-vendor/{id}', [SuperAdminController::class, 'update_vendor'])->name('superadmin.update_vendor');
 
+
+    //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    //////////////////////////////////////////////// Dashboard and Report Routes /////////////////////////////////////////////////////////////////////////
+    //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+    Route::get('/company-summary/{id}', [SuperAdminController::class, 'companySummary'])->name('superadmin.company-summary');
+
+    Route::get('/report-section/{id}', [SuperAdminController::class, 'report_section'])->name('superadmin.report-section');
+
+    Route::get('/report-section/{id}', [SuperAdminController::class, 'report_section'])->name('superadmin.report-section');
+
+    Route::get('/company-trend/{id}', [SuperAdminController::class, 'company_trend'])->name('superadmin.company-trend');
+
+    Route::get('/findings/{id}', [SuperAdminController::class, 'findings'])->name('superadmin.findings');
+
+    Route::get('/digital-footprints/{id}', [SuperAdminController::class, 'digital_footprints'])->name('superadmin.digital-footprints');
+
+    Route::get('/compliance/{id}', [SuperAdminController::class, 'compliance'])->name('superadmin.compliance');
+
+    Route::get('/financial-risk/{id}', [SuperAdminController::class, 'financial_risk'])->name('superadmin.financial-risk');
+
+    //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    //////////////////////////////////////////////// Digital Footprints /////////////////////////////////////////////////////////////////////////
+    //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+
 });
 
 Route::middleware(['companyadmin'])->prefix('companyadmin')->group(function () {

@@ -18,6 +18,9 @@
     <link rel="stylesheet" href="{{ asset('assets/vendors/flag-icon-css/css/flag-icons.min.css') }}">
     <link rel="stylesheet" href="{{ asset('assets/vendors/owl-carousel-2/owl.carousel.min.css') }}">
     <link rel="stylesheet" href="{{ asset('assets/vendors/owl-carousel-2/owl.theme.default.min.css') }}">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
     <!-- End plugin css for this page -->
     <!-- inject:css -->
     <!-- endinject -->
@@ -32,28 +35,28 @@
     <div class="container-scroller">
 
         @if (session('success'))
-        <script>
-            Swal.fire({
-                icon: 'success',
-                title: 'Success',
-                text: "{{ session('success') }}",
-                timer: 3000,
-                showConfirmButton: false
-            });
-        </script>
-    @endif
+            <script>
+                Swal.fire({
+                    icon: 'success',
+                    title: 'Success',
+                    text: "{{ session('success') }}",
+                    timer: 3000,
+                    showConfirmButton: false
+                });
+            </script>
+        @endif
 
-    @if (session('error'))
-        <script>
-            Swal.fire({
-                icon: 'error',
-                title: 'Error',
-                text: "{{ session('error') }}",
-                timer: 3000,
-                showConfirmButton: false
-            });
-        </script>
-    @endif
+        @if (session('error'))
+            <script>
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: "{{ session('error') }}",
+                    timer: 3000,
+                    showConfirmButton: false
+                });
+            </script>
+        @endif
         <!-- partial:partials/_sidebar.html -->
         @include('superadmin.layouts.sidebar')
 
