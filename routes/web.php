@@ -6,6 +6,7 @@ use App\Http\Controllers\AuthController;
 use App\Http\Controllers\SuperAdminController;
 use App\Http\Controllers\CompanyAdminController;
 use App\Http\Controllers\UserController;
+
 /*
 |--------------------------------------------------------------------------
 | Web Routes
@@ -80,7 +81,7 @@ Route::middleware(['superadmin'])->prefix('superadmin')->group(function () {
 
     Route::get('/report-section/{id}', [SuperAdminController::class, 'report_section'])->name('superadmin.report-section');
 
-    Route::get('/report-section/{id}', [SuperAdminController::class, 'report_section'])->name('superadmin.report-section');
+    Route::get('/widget-section/{id}', [SuperAdminController::class, 'widget_section'])->name('superadmin.widget-section');
 
     Route::get('/company-trend/{id}', [SuperAdminController::class, 'company_trend'])->name('superadmin.company-trend');
 
@@ -91,6 +92,10 @@ Route::middleware(['superadmin'])->prefix('superadmin')->group(function () {
     Route::get('/compliance/{id}', [SuperAdminController::class, 'compliance'])->name('superadmin.compliance');
 
     Route::get('/financial-risk/{id}', [SuperAdminController::class, 'financial_risk'])->name('superadmin.financial-risk');
+
+    Route::post('/data-breach-finding', [SuperAdminController::class, 'data_breach_finding'])->name('superadmin.data-breach-finding');
+
+    Route::post('/ransomware-findings', [SuperAdminController::class, 'ransomware_findings'])->name('superadmin.ransomware-findings');
 
     //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     //////////////////////////////////////////////// Digital Footprints /////////////////////////////////////////////////////////////////////////

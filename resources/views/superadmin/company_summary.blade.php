@@ -19,6 +19,14 @@
                         </button>
                     </form>
 
+                    {{-- <form action="{{ route('superadmin.widget-section', ['id' => $cmp_id]) }}" method="GET">
+                        @csrf
+                        <input type="hidden" name="cmp_id" value="{{ $cmp_id }}">
+                        <button type="submit" class="btn btn-warning float-start">
+                            Visual Reports
+                        </button>
+                    </form> --}}
+
                 </div>
 
                 <div class="col-xl-3 col-sm-6 grid-margin stretch-card">

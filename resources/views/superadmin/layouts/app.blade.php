@@ -26,6 +26,7 @@
     <!-- endinject -->
     <!-- Layout styles -->
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
     <link rel="stylesheet" href="{{ asset('assets/css/style.css') }}">
     <!-- End layout styles -->
     <link rel="shortcut icon" href="{{ asset('assets/images/img/favicon.png') }}">

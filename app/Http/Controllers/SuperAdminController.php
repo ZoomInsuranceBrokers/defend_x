@@ -8,6 +8,8 @@ use Illuminate\Support\Facades\Auth;
 use App\Models\User;
 use App\Models\CompanyMaster;
 use App\Models\VendorMaster;
+use DateTime;
+use DateInterval;
 
 class SuperAdminController extends Controller
 {
@@ -510,6 +512,7 @@ class SuperAdminController extends Controller
 
         return view('superadmin.company_summary', compact('summary', 'cmp_id'));
     }
+
     public function report_section(Request $request, $cmp_id)
     {
         $query_cmp_id = $request->query('cmp_id');
@@ -519,6 +522,30 @@ class SuperAdminController extends Controller
         }
 
         return view('superadmin.report_section', compact('cmp_id'));
+    }
+
+    public function widget_section(Request $request, $cmp_id)
+    {
+        $query_cmp_id = $request->query('cmp_id');
+
+        if (empty($cmp_id) || $cmp_id != $query_cmp_id) {
+            return redirect()->back()->with('error', 'Company ID mismatch or missing');
+        }
+        $token = $this->getAccessToken();
+
+
+        $information_url = "https://app.blackkitetech.com/api/v2/companies/{$cmp_id}/information";
+        $information_response = $this->fetchData($information_url, $token);
+
+        $compliance_widget_url = "https://app.blackkitetech.com/api/v2/widgets/compliance-rating?companyId={$cmp_id}&widgetWidth=256";
+        $compliance_widget = $this->fetchData($compliance_widget_url, $token);
+        $compliance_widget_base64 = base64_encode($compliance_widget['data']);
+        $data = [
+            'information_response' => json_decode($information_response['data'], true),
+            'compliance_widget' => $compliance_widget_base64,
+
+        ];
+        return view('superadmin.widget_section', compact('cmp_id', 'data'));
     }
 
     public function company_trend($cmp_id)
@@ -644,6 +671,115 @@ class SuperAdminController extends Controller
         curl_close($ch);
 
         return ['success' => $httpCode === 200, 'status' => $httpCode, 'data' => $response];
+    }
+
+    public function findings(Request $request, $cmp_id)
+    {
+        $token = $this->getAccessToken();
+
+        $current_date = new DateTime();
+        $start_date = $current_date->sub(new DateInterval('P15D'))->format('Y-m-d\TH:i:s\Z'); // 15 days ago
+        $end_date = (new DateTime())->format('Y-m-d\TH:i:s\Z'); // Current date
+
+        $findings_url = "https://app.blackkitetech.com/api/v2/companies/{$cmp_id}/findings?page_number=1&page_size=5000&start_date={$start_date}&end_date={$end_date}&type=All";
+        $findings = $this->fetchData($findings_url, $token);
+
+        $decodedFindings = json_decode($findings['data'], true);
+
+        // Group findings into categories
+        $categories = [
+            'All Findings',
+            'Data Breach',
+            'Ransomware',
+            'Fraudulent Domain',
+            'Patch Management',
+            'Application Security',
+        ];
+
+        $data = [
+            'findings' => $decodedFindings,
+            'categories' => $categories,
+        ];
+
+        return view('superadmin.findings', compact('data', 'cmp_id'));
+    }
+
+
+    public function data_breach_finding(Request $request)
+    {
+        $token = $this->getAccessToken();
+
+        // Step 1: Fetch the initial data breach findings
+        $data_breach_url = "https://app.blackkitetech.com/api/v2/companies/{$request->cmp_id}/findings/databreach?page_number=1&page_size=5000";
+        $data_breach_findings = $this->fetchData($data_breach_url, $token);
+
+        // Step 2: Check if response contains valid data
+        if (!isset($data_breach_findings['data'])) {
+            return response()->json(['error' => 'Invalid data from API'], 500);
+        }
+
+        // Decode the data field (JSON string) into an array
+        $findings_data = json_decode($data_breach_findings['data'], true);
+
+        if (!is_array($findings_data)) {
+            return response()->json(['error' => 'Failed to decode findings data'], 500);
+        }
+
+        $detailed_findings = [];
+
+        // Step 3: Loop through each finding and fetch detailed data
+        foreach ($findings_data as $finding) {
+            if (isset($finding['Url'])) {
+                $detailed_data = $this->fetchData($finding['Url'], $token);
+                $detailed_data_array = is_array($detailed_data) ? $detailed_data : json_decode($detailed_data, true);
+
+                if ($detailed_data_array) {
+                    $detailed_findings[] = $detailed_data_array; // Collect detailed data
+                }
+            }
+        }
+
+        // Step 4: Return all detailed findings
+        return response()->json(['data' => $detailed_findings]);
+    }
+
+    public function ransomware_findings(Request $request)
+    {
+        $token = $this->getAccessToken();
+
+        dd($request->cmp_id);
+        // Step 1: Fetch the initial ransomware findings
+        $ransomware_url = "https://app.blackkitetech.com/api/v2/companies/{$request->cmp_id}/findings/ransomware?page_number=1&page_size=5000";
+        $ransomware_findings = $this->fetchData($ransomware_url, $token);
+
+        // Step 2: Check if response contains valid data
+        if (!isset($ransomware_findings['data'])) {
+            return response()->json(['error' => 'Invalid data from API'], 500);
+        }
+
+        // Decode the data field (JSON string) into an array
+        $findings_data = json_decode($ransomware_findings['data'], true);
+        dd($findings_data);
+        if (!is_array($findings_data)) {
+            return response()->json(['error' => 'Failed to decode findings data'], 500);
+        }
+
+        $detailed_findings = [];
+
+        // Step 3: Loop through each finding and fetch detailed data
+        foreach ($findings_data as $finding) {
+            if (isset($finding['Url'])) {
+                $detailed_data = $this->fetchData($finding['Url'], $token);
+                $detailed_data_array = is_array($detailed_data) ? $detailed_data : json_decode($detailed_data, true);
+
+                if ($detailed_data_array) {
+                    $detailed_findings[] = $detailed_data_array; // Collect detailed data
+                }
+            }
+        }
+
+        // Step 4: Return all detailed findings
+        return response()->json(['data' => $detailed_findings]);
     }
 
 
