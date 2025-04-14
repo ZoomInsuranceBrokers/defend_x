@@ -137,16 +137,21 @@
                     <!-- Fraudulent Domain Tab -->
                     <div class="tab-pane fade" id="fraudulent-domain">
                         <p class="text-white">Content for Fraudulent Domain</p>
+                        <div id="fraudulent-domains-content" class="table-responsive"></div>
+
                     </div>
 
                     <!-- Patch Management Tab -->
                     <div class="tab-pane fade" id="patch-management">
                         <p class="text-white">Content for Patch Management</p>
+                        <div id="patch-management-content" class="table-responsive"></div>
+
                     </div>
 
                     <!-- Application Security Tab -->
                     <div class="tab-pane fade" id="application-security">
                         <p class="text-white">Content for Application Security</p>
+                        <div id="application-security-content" class="table-responsive"></div>
                     </div>
                 </div>
             </div>
@@ -189,8 +194,7 @@
                             cmp_id: {{ $cmp_id }} // Include cmp_id
                         },
                         success: function(response) {
-                            const findings = response
-                                .data; // Adjust to match your API response structure
+                            const findings = response.data;
                             if (Array.isArray(findings) && findings.length > 0) {
                                 // Parse each 'data' field from JSON string to JavaScript object
                                 const parsedFindings = findings.map(finding => JSON.parse(
@@ -209,14 +213,14 @@
                                         </thead>
                                         <tbody>
                                             ${parsedFindings.map(finding => `
-                                                            <tr>
-                                                                <td>${finding.FindingId || 'N/A'}</td>
-                                                                <td>${finding.Status || 'N/A'}</td>
-                                                                <td>${finding.Severity || 'N/A'}</td>
-                                                                <td>${finding.Domain || 'N/A'}</td>
-                                                                <td>${finding.FindingTitle || 'N/A'}</td>
-                                                            </tr>
-                                                        `).join('')}
+                                                                                    <tr>
+                                                                                        <td>${finding.FindingId || 'N/A'}</td>
+                                                                                        <td>${finding.Status || 'N/A'}</td>
+                                                                                        <td>${finding.Severity || 'N/A'}</td>
+                                                                                        <td>${finding.Domain || 'N/A'}</td>
+                                                                                        <td>${finding.FindingTitle || 'N/A'}</td>
+                                                                                    </tr>
+                                                                                `).join('')}
                                         </tbody>
                                     </table>`;
 
@@ -241,10 +245,12 @@
     <script>
         document.addEventListener("DOMContentLoaded", function() {
             const ransomwareTab = document.querySelector('a[href="#ransomware"]');
-            const ransomwareContent = document.getElementById("ransomware-content"); // Fix the content ID.
+            const ransomwareContent = document.getElementById("ransomware-content");
+            let isAjaxTriggeredRansomware = false; // Flag to prevent multiple AJAX calls
 
             ransomwareTab.addEventListener("shown.bs.tab", function() {
-                if (ransomwareContent.innerHTML.trim() === "") {
+                if (!isAjaxTriggeredRansomware) {
+                    isAjaxTriggeredRansomware = true; // Set flag to true to prevent further AJAX calls
                     // Show loading message
                     ransomwareContent.innerHTML = '<p class="text-white">Loading data...</p>';
 
@@ -252,44 +258,53 @@
                     $.ajax({
                         url: "{{ route('superadmin.ransomware-findings') }}",
                         type: "POST",
-                        headers: {
-                            'X-CSRF-TOKEN': '{{ csrf_token() }}',
-                            cmp_id: {{ $cmp_id }} // Include cmp_id
-                        }, // Include CSRF token as header
                         data: {
-                            _token: "{{ csrf_token() }}", // Optional, already in headers
+                            _token: "{{ csrf_token() }}", // Include CSRF token
+                            cmp_id: {{ $cmp_id }} // Include cmp_id
                         },
                         success: function(response) {
-                            if (response.success && Array.isArray(response.data) && response
-                                .data.length > 0) {
-                                const findings = response.data;
+                            const findings = response.data;
+                            if (Array.isArray(findings) && findings.length > 0) {
+                                // Parse each 'data' field from JSON string to JavaScript object
+                                const parsedFindings = findings.map(finding => JSON.parse(
+                                    finding.data));
 
                                 let table = `
-                            <table class="table table-bordered table-dark">
-                                <thead class="table-secondary text-dark">
-                                    <tr>
-                                        <th>Finding ID</th>
-                                        <th>Module</th>
-                                        <th>URL</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    ${findings.map(finding => `
-                                            <tr>
-                                                <td>${finding.FindingId || 'N/A'}</td>
-                                                <td>${finding.Module || 'N/A'}</td>
-                                                <td><a href="${finding.Url}" target="_blank">${finding.Url}</a></td>
-                                            </tr>
-                                        `).join('')}
-                                </tbody>
-                            </table>`;
+                                <table class="table table-bordered table-dark">
+                                    <thead class="table-secondary text-dark">
+                                        <tr>
+                                            <th>Finding ID</th>
+                                            <th>Severity</th>
+                                            <th>Title</th>
+                                            <th>Detail</th>
+                                            <th>Domain</th>
+                                            <th>Last Check Date</th>
+                                            <th>URL</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        ${parsedFindings.map(finding => `
+                                                                <tr>
+                                                                    <td>${finding.FindingId || 'N/A'}</td>
+                                                                    <td>${finding.Severity || 'N/A'}</td>
+                                                                    <td>${finding.Title || finding.FindingTitle || 'N/A'}</td>
+                                                                    <td>${finding.Detail || finding.Snippet || 'N/A'}</td>
+                                                                    <td>${finding.Domain || 'N/A'}</td>
+                                                                    <td>${finding.LastCheckDate || 'N/A'}</td>
+                                                                    <td>${finding.ShareUrl ? `<a href="${finding.ShareUrl}" target="_blank">${finding.ShareUrl}</a>` : 'N/A'}</td>
+                                                                </tr>
+                                                            `).join('')}
+                                    </tbody>
+                                </table>`;
 
+                                // Display the table in the specified container
                                 ransomwareContent.innerHTML = table;
                             } else {
                                 ransomwareContent.innerHTML =
                                     '<p class="text-white">No ransomware findings available.</p>';
                             }
                         },
+
                         error: function(xhr, status, error) {
                             ransomwareContent.innerHTML =
                                 `<p class="text-danger">Error loading data: ${error}</p>`;
@@ -299,4 +314,280 @@
             });
         });
     </script>
+    <script>
+        document.addEventListener("DOMContentLoaded", function() {
+            const fraudulentDomainsTab = document.querySelector('a[href="#fraudulent-domain"]');
+            const fraudulentDomainsContent = document.getElementById("fraudulent-domains-content");
+
+            fraudulentDomainsTab.addEventListener("shown.bs.tab", function() {
+                if (fraudulentDomainsContent.innerHTML.trim() === "") {
+                    fraudulentDomainsContent.innerHTML = '<p class="text-white">Loading data...</p>';
+
+                    $.ajax({
+                        url: "{{ route('superadmin.fraudulent-findings') }}",
+                        type: "POST",
+                        headers: {
+                            'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                        },
+                        data: {
+                            _token: "{{ csrf_token() }}",
+                            cmp_id: {{ $cmp_id }},
+                        },
+                        success: function(response) {
+                            const findings = response.data;
+                            if (Array.isArray(findings) && findings.length > 0) {
+                                let table = `
+                            <table class="table table-bordered table-dark">
+                                <thead class="table-secondary text-dark">
+                                    <tr>
+                                        <th>Finding ID</th>
+                                        <th>Fraudulent Domain</th>
+                                        <th>Severity</th>
+                                        <th>Status</th>
+                                        <th>Finding Date</th>
+                                        <th>Possibility</th>
+                                        <th>Registrar</th>
+                                        <th>Whois Email</th>
+                                        <th>Action</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    ${findings.map(finding => `
+                                                        <tr>
+                                                            <td>${finding.FindingId || 'N/A'}</td>
+                                                            <td>${finding.FraudulentDomain || 'N/A'}</td>
+                                                            <td>${finding.Severity || 'N/A'}</td>
+                                                            <td>${finding.Status || 'N/A'}</td>
+                                                            <td>${new Date(finding.FindingDate).toLocaleString() || 'N/A'}</td>
+                                                            <td>${finding.Possibility || 'N/A'}%</td>
+                                                            <td>${finding.Whois?.Registrar || 'N/A'}</td>
+                                                            <td>${finding.Whois?.Email || 'N/A'}</td>
+                                                            <td>
+                                                                ${finding.Ticket?.TicketId
+                                                                    ? `<a href="/tickets/${finding.Ticket.TicketId}" target="_blank">View Ticket</a>`
+                                                                    : 'No Ticket'}
+                                                            </td>
+                                                        </tr>`).join('')}
+                                </tbody>
+                            </table>
+                        `;
+
+                                fraudulentDomainsContent.innerHTML = table;
+                            } else {
+                                fraudulentDomainsContent.innerHTML =
+                                    '<p class="text-white">No fraudulent domain findings available.</p>';
+                            }
+                        },
+                        error: function(xhr, status, error) {
+                            fraudulentDomainsContent.innerHTML =
+                                `<p class="text-danger">Error loading data: ${error}</p>`;
+                        }
+                    });
+                }
+            });
+        });
+    </script>
+
+    <!-- Modal Structure (with fixed height) -->
+    <div class="modal fade" id="findingDetailsModal" tabindex="-1" role="dialog"
+        aria-labelledby="findingDetailsModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg" role="document">
+            <div class="modal-content" style="max-height: 500px; overflow-y: auto;">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="findingDetailsModalLabel">Finding Details</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body" id="modalBodyContent">
+                    <!-- Dynamic content will be inserted here -->
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Patch Management Details Div (Initial Empty) -->
+    <div id="patch-management-details" class="mt-4">
+        <!-- Details will be shown here when the Patch ID is clicked -->
+    </div>
+
+    <script>
+        document.addEventListener("DOMContentLoaded", function() {
+            const patchManagementTab = document.querySelector('a[href="#patch-management"]');
+            const patchManagementContent = document.getElementById("patch-management-content");
+
+            patchManagementTab.addEventListener("shown.bs.tab", function() {
+                if (patchManagementContent.innerHTML.trim() === "") {
+                    patchManagementContent.innerHTML = '<p class="text-white">Loading data...</p>';
+
+                    $.ajax({
+                        url: "{{ route('superadmin.patchmanagement-findings') }}",
+                        type: "POST",
+                        headers: {
+                            'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                        },
+                        data: {
+                            cmp_id: {{ $cmp_id }},
+                        },
+                        success: function(response) {
+                            const findings = response.data;
+                            if (Array.isArray(findings) && findings.length > 0) {
+                                let table = `
+                            <table class="table table-bordered table-dark">
+                                <thead class="table-secondary text-dark">
+                                    <tr>
+                                        <th>Finding ID</th>
+                                        <th>Domain</th>
+                                        <th>IP Address</th>
+                                        <th>Severity</th>
+                                        <th>Status</th>
+                                        <th>Finding Date</th>
+                                        <th>CVSS Score</th>
+                                        <th>Product</th>
+                                        <th>Ticket</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    ${findings.map(finding => `
+                                                <tr>
+                                                    <td><a href="javascript:void(0);" class="patch-id-link" data-finding-id="${finding.FindingId}" data-finding="${JSON.stringify(finding)}">${finding.FindingId || 'N/A'}</a></td>
+                                                    <td>${finding.Domain || 'N/A'}</td>
+                                                    <td>${finding.IPAddress || 'N/A'}</td>
+                                                    <td>${finding.Severity || 'N/A'}</td>
+                                                    <td>${finding.Status || 'N/A'}</td>
+                                                    <td>${finding.FindingDate ? new Date(finding.FindingDate).toLocaleString() : 'N/A'}</td>
+                                                    <td>${finding.CvssScore || 'N/A'}</td>
+                                                    <td>${finding.ProductName || 'N/A'}</td>
+                                                    <td>
+                                                        ${finding.Ticket?.TicketId
+                                                            ? `<a href="/tickets/${finding.Ticket.TicketId}" target="_blank">View Ticket</a>`
+                                                            : 'No Ticket'}
+                                                    </td>
+                                                </tr>`).join('')}
+                                </tbody>
+                            </table>
+                        `;
+
+                                patchManagementContent.innerHTML = table;
+
+                                // Add event listener for clicking on Patch ID
+                                const patchIdLinks = document.querySelectorAll(
+                                    '.patch-id-link');
+                                patchIdLinks.forEach(link => {
+                                    link.addEventListener('click', function() {
+                                        const finding = JSON.parse(this
+                                            .getAttribute('data-finding'));
+
+                                        let detailsDiv = `
+                                        <div class="patch-details-card" id="details-${finding.FindingId}">
+                                            <h4>Finding ID: ${finding.FindingId || 'N/A'}</h4>
+                                            <p><strong>Domain:</strong> ${finding.Domain || 'N/A'}</p>
+                                            <p><strong>IP Address:</strong> ${finding.IPAddress || 'N/A'}</p>
+                                            <p><strong>Severity:</strong> ${finding.Severity || 'N/A'}</p>
+                                            <p><strong>Status:</strong> ${finding.Status || 'N/A'}</p>
+                                            <p><strong>Finding Date:</strong> ${finding.FindingDate ? new Date(finding.FindingDate).toLocaleString() : 'N/A'}</p>
+                                            <p><strong>CVSS Score:</strong> ${finding.CvssScore || 'N/A'}</p>
+                                            <p><strong>Product:</strong> ${finding.ProductName || 'N/A'}</p>
+                                            <p><strong>Ticket:</strong> ${finding.Ticket?.TicketId
+                                                ? `<a href="/tickets/${finding.Ticket.TicketId}" target="_blank">View Ticket</a>`
+                                                : 'No Ticket'}</p>
+                                        </div>
+                                    `;
+
+                                        // Insert the details into the patch-management-details div
+                                        document.getElementById(
+                                                "patch-management-details")
+                                            .innerHTML = detailsDiv;
+
+                                        // Optionally, open the modal with fixed height
+                                        $('#findingDetailsModal').modal('show');
+                                    });
+                                });
+
+                            } else {
+                                patchManagementContent.innerHTML =
+                                    '<p class="text-white">No patch management findings available.</p>';
+                            }
+                        },
+                        error: function(xhr, status, error) {
+                            patchManagementContent.innerHTML =
+                                `<p class="text-danger">Error loading data: ${error}</p>`;
+                        }
+                    });
+                }
+            });
+        });
+    </script>
+
+    <script>
+        document.addEventListener("DOMContentLoaded", function() {
+            const applicationSecurityTab = document.querySelector('a[href="#application-security"]');
+            const applicationSecurityContent = document.getElementById("application-security-content");
+
+            applicationSecurityTab.addEventListener("shown.bs.tab", function() {
+                if (applicationSecurityContent.innerHTML.trim() === "") {
+                    applicationSecurityContent.innerHTML = '<p class="text-white">Loading data...</p>';
+
+                    $.ajax({
+                        url: "{{ route('superadmin.applicationsecurity-findings') }}",
+                        type: "POST",
+                        headers: {
+                            'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                        },
+                        data: {
+                            _token: "{{ csrf_token() }}",
+                            cmp_id: {{ $cmp_id }},
+                        },
+                        success: function(response) {
+                            const findings = response.data;
+                            if (Array.isArray(findings) && findings.length > 0) {
+                                let table = `
+                            <table class="table table-bordered table-dark">
+                                <thead class="table-secondary text-dark">
+                                    <tr>
+                                        <th>Finding ID</th>
+                                        <th>Title</th>
+                                        <th>Status</th>
+                                        <th>Severity</th>
+                                        <th>Control ID</th>
+                                        <th>Domain</th>
+                                        <th>Finding Date</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    ${findings.map(finding => `
+                                            <tr>
+                                                <td>${finding.FindingId || 'N/A'}</td>
+                                                <td>${finding.Title || 'N/A'}</td>
+                                                <td>${finding.Status || 'N/A'}</td>
+                                                <td>${finding.Severity || 'N/A'}</td>
+                                                <td>${finding.ControlId || 'N/A'}</td>
+                                                <td>${finding.Domain || 'N/A'}</td>
+                                                <td>${new Date(finding.FindingDate).toLocaleString() || 'N/A'}</td>
+                                            </tr>`).join('')}
+                                </tbody>
+                            </table>
+                            `;
+
+                                applicationSecurityContent.innerHTML = table;
+                            } else {
+                                applicationSecurityContent.innerHTML =
+                                    '<p class="text-white">No application security findings available.</p>';
+                            }
+                        },
+                        error: function(xhr, status, error) {
+                            applicationSecurityContent.innerHTML =
+                                `<p class="text-danger">Error loading data: ${error}</p>`;
+                        }
+                    });
+                }
+            });
+        });
+    </script>
+
+
 @endsection

@@ -97,6 +97,12 @@ Route::middleware(['superadmin'])->prefix('superadmin')->group(function () {
 
     Route::post('/ransomware-findings', [SuperAdminController::class, 'ransomware_findings'])->name('superadmin.ransomware-findings');
 
+    Route::post('/fraudulent-domains-findings', [SuperAdminController::class, 'fraudulent_domains_findings'])->name('superadmin.fraudulent-findings');
+
+    Route::post('/patchmanagement-findings', [SuperAdminController::class, 'patchmanagement_findings'])->name('superadmin.patchmanagement-findings');
+
+    Route::post('/applicationsecurity-findings', [SuperAdminController::class, 'applicationsecurity_findings'])->name('superadmin.applicationsecurity-findings');
+
     //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     //////////////////////////////////////////////// Digital Footprints /////////////////////////////////////////////////////////////////////////
     //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////

@@ -747,26 +747,21 @@ class SuperAdminController extends Controller
     {
         $token = $this->getAccessToken();
 
-        dd($request->cmp_id);
-        // Step 1: Fetch the initial ransomware findings
         $ransomware_url = "https://app.blackkitetech.com/api/v2/companies/{$request->cmp_id}/findings/ransomware?page_number=1&page_size=5000";
         $ransomware_findings = $this->fetchData($ransomware_url, $token);
 
-        // Step 2: Check if response contains valid data
         if (!isset($ransomware_findings['data'])) {
             return response()->json(['error' => 'Invalid data from API'], 500);
         }
 
-        // Decode the data field (JSON string) into an array
         $findings_data = json_decode($ransomware_findings['data'], true);
-        dd($findings_data);
         if (!is_array($findings_data)) {
             return response()->json(['error' => 'Failed to decode findings data'], 500);
         }
 
         $detailed_findings = [];
 
-        // Step 3: Loop through each finding and fetch detailed data
+
         foreach ($findings_data as $finding) {
             if (isset($finding['Url'])) {
                 $detailed_data = $this->fetchData($finding['Url'], $token);
@@ -778,8 +773,75 @@ class SuperAdminController extends Controller
             }
         }
 
-        // Step 4: Return all detailed findings
         return response()->json(['data' => $detailed_findings]);
+    }
+
+    public function fraudulent_domains_findings(Request $request)
+    {
+        $token = $this->getAccessToken();
+
+        $fraudulent_domains_url = "https://app.blackkitetech.com/api/v2/companies/{$request->cmp_id}/findings/fraudulentdomains";
+        $fraudulent_domains_findings = $this->fetchData($fraudulent_domains_url, $token);
+
+        if (!isset($fraudulent_domains_findings['data'])) {
+            return response()->json(['error' => 'Invalid data from API'], 500);
+        }
+
+        $findings_data = json_decode($fraudulent_domains_findings['data'], true);
+        if (!is_array($findings_data)) {
+            return response()->json(['error' => 'Failed to decode findings data'], 500);
+        }
+
+        $detailed_findings = [];
+
+        foreach ($findings_data as $finding) {
+            if (isset($finding['FindingId'])) {
+                $detailed_findings[] = $finding; // Collect necessary data
+            }
+        }
+
+        return response()->json(['data' => $detailed_findings]);
+    }
+
+    public function patchmanagement_findings(Request $request)
+    {
+        $token = $this->getAccessToken(); // Fetch the access token
+
+        $patchmanagement_url = "https://app.blackkitetech.com/api/v2/companies/{$request->cmp_id}/findings/patchmanagement";
+        $patchmanagement_findings = $this->fetchData($patchmanagement_url, $token);
+
+        if (!isset($patchmanagement_findings['data'])) {
+            return response()->json(['error' => 'Invalid data from API'], 500);
+        }
+
+        // Decode JSON response
+        $findings_data = json_decode($patchmanagement_findings['data'], true);
+        if (!is_array($findings_data)) {
+            return response()->json(['error' => 'Failed to decode findings data'], 500);
+        }
+
+        return response()->json(['data' => $findings_data]);
+    }
+
+    public function applicationsecurity_findings(Request $request)
+    {
+        $token = $this->getAccessToken();
+
+        $application_security_url = "https://app.blackkitetech.com/api/v2/companies/{$request->cmp_id}/findings/applicationsecurity";
+
+        $application_security_findings = $this->fetchData($application_security_url, $token);
+
+        if (!isset($application_security_findings['data'])) {
+            return response()->json(['error' => 'Invalid data from API'], 500);
+        }
+
+        $findings_data = json_decode($application_security_findings['data'], true);
+
+        if (!is_array($findings_data)) {
+            return response()->json(['error' => 'Failed to decode findings data'], 500);
+        }
+
+        return response()->json(['data' => $findings_data]);
     }
 
 
