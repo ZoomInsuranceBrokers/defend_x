@@ -845,6 +845,39 @@ class SuperAdminController extends Controller
     }
 
 
+    public function compliance($cmp_id)
+    {
+        $token = $this->getAccessToken();
+
+
+        $get_compliance_standard_url = "https://app.blackkitetech.com/api/v2/compliance/standards";
+        $getcompliance_standard_response = $this->fetchData($get_compliance_standard_url, $token);
+
+
+        $data = [
+            'getcompliance_standard_response' => json_decode($getcompliance_standard_response['data'], true),
+        ];
+
+        return view('superadmin.compliance', compact('data', 'cmp_id'));
+    }
+
+    public function search_compliance(Request $request)
+    {
+        $token = $this->getAccessToken();
+
+        $cmp_id = urlencode($request->cmp_id);
+        $standard = urlencode($request->input('compliance_standard'));
+
+        $compliance_standard_findings_url = "https://app.blackkitetech.com/api/v2/companies/{$cmp_id}/compliance/{$standard}/findings?page_number=1&page_size=30";
+
+        $compliance_standard_findings = $this->fetchData($compliance_standard_findings_url, $token);
+
+
+        $compliance_area_findings_url = "https://app.blackkitetech.com/api/v2/companies/{$cmp_id}/compliance/{$standard}/areas?page_number=1&page_size=30";
+
+        $compliance_area_findings = $this->fetchData($compliance_area_findings_url, $token);
+        return response()->json(['data' => $compliance_standard_findings,'areas' => $compliance_area_findings]);
+    }
 
     //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     //////////////////////////////////////////////// Report Functions /////////////////////////////////////////////////////////////////////////

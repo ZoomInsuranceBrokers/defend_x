@@ -10,9 +10,6 @@
                 class="mdi mdi-heart text-danger"></i></span>
     </div>
 </footer>
-<script src="{{ asset('assets/vendors/js/vendor.bundle.base.js') }}"></script>
-<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 <script src="https://cdn.datatables.net/1.13.5/js/jquery.dataTables.min.js"></script>
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 
